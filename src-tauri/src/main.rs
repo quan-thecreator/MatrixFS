@@ -21,9 +21,10 @@ use std::time::Duration;
 use std::{env, fs};
 
 fn main() {
-  tauri::Builder::default()
-    .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![test_endpoints])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }
 #[tauri::command]
 fn test_endpoints() -> bool {
@@ -35,7 +36,7 @@ fn test_endpoints() -> bool {
             //println!("Web server is up!");
             return Ok(());
         } else {
-           // println!(
+            // println!(
             //    "Web server is not responding normally, status code: {}",
             //    response.status()
             //);
