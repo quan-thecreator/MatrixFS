@@ -67,5 +67,6 @@ fn test_endpoints() -> bool {
         //typewrite("All systems operational.");
         return true;
     }
+    println!("false");
     return false;
 }
