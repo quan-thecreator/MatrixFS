@@ -1,9 +1,0 @@
-[package]
-name = "MatrixFS"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-iced = "0.12.1"
-log = "0.4.21"
-simple_logger = "5.0.0"
