@@ -28,21 +28,18 @@ fn main() {
 }
 #[tauri::command]
 fn test_endpoints() -> bool {
-    fn check_web_server(url: &str) -> Result<(), reqwest::Error> {
-        let response = reqwest::blocking::get(url)?;
+    fn check_web_server(url: &str) -> Result<(),()> {
+        let response = reqwest::blocking::get(url);
 
-        // Check if the request was successful, ignore the response status code
-        if response.status().is_success() {
-            //println!("Web server is up!");
-            return Ok(());
-        } else {
-            // println!(
-            //    "Web server is not responding normally, status code: {}",
-            //    response.status()
-            //);
+        // Check if the request was successful, ignore the response status 
+        if let Ok(response_ok) = response{
+            if response_ok.status().is_success(){
+                return Ok(());
+            }
+
         }
 
-        Ok(())
+        return Err(());
     }
     let bool_test1;
     let bool_test2;
