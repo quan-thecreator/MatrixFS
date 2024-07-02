@@ -112,7 +112,21 @@ fn package_existing_file_mfs() -> Option<String> {
     encrypt_large_file(as_ref_path, destinatino_file.as_str(), &key_bytes, &nonce).unwrap();
     let mut ipfs_hash: String = String::new();
     // FIX THIS BY RECIEVEING THE HASH IN A DIFFERENT FUNCTIUON COMMAND
-    ipfs_hash = String::from(ipfs_hash.trim());
+    let mut file = File::open(destinatino_file.clone()).unwrap();
+    let mut contents = Vec::new();
+
+    // Read the file contents into a buffer
+    file.read_to_end(&mut contents).unwrap();
+    let part = reqwest::blocking::multipart::Part::bytes(contents).file_name(get_file_name_string(destinatino_file.clone()));
+    let form = reqwest::blocking::multipart::Form::new().part("file", part);
+    let client = reqwest::blocking::Client::new();
+    let response: reqwest::blocking::Response = client.post("http://127.0.0.1:5001/api/v0/add")
+        .multipart(form)
+        .send()
+        .unwrap();
+    let add_response: AddResponseJSON = response.json().unwrap();
+
+    ipfs_hash = add_response.Hash;
     let to_construct: MatrixFSHash = MatrixFSHash {
         ipfs_hash,
         file_name: String::from(get_file_name(as_ref_path)),
@@ -120,6 +134,13 @@ fn package_existing_file_mfs() -> Option<String> {
         nonce: nonce_string,
     };
     return Some(to_construct.construct_hash());
+}
+#[derive(Serialize, Deserialize)]
+struct AddResponseJSON{
+   Bytes: String,
+    Hash: String,
+    Name: String,
+    Size: String
 }
 
 #[tauri::command]
@@ -253,4 +274,9 @@ fn check_file_exists(path_str: &str) -> bool {
 fn get_file_name(path_str: &str) -> &str {
     let path = Path::new(path_str);
     return path.file_name().unwrap().to_str().unwrap();
+}
+fn get_file_name_string(path_string: String) -> String{
+    let path = PathBuf::from(path_string);
+    return path.file_name().unwrap().to_string_lossy().into_owned();
+
 }
