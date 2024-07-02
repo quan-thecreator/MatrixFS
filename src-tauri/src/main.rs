@@ -111,6 +111,7 @@ fn package_existing_file() -> Option<String> {
     println!("{}", destinatino_file.clone());
     encrypt_large_file(as_ref_path, destinatino_file.as_str(), &key_bytes, &nonce).unwrap();
     let mut ipfs_hash: String = String::new();
+    // FIX THIS BY RECIEVEING THE HASH IN A DIFFERENT FUNCTIUON COMMAND
     ipfs_hash = String::from(ipfs_hash.trim());
     let to_construct: MatrixFSHash = MatrixFSHash {
         ipfs_hash,
