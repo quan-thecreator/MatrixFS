@@ -5,7 +5,7 @@
   import { P, GradientButton, Toast } from 'flowbite-svelte';
   import { CheckCircleSolid } from 'flowbite-svelte-icons';
   import { slide } from 'svelte/transition';
-  import { goto } from '@sveltejs/kit';
+  //import { goto } from '@sveltejs/kit';
   let endpoints: boolean = false;
   let available='Unavailable';
   let color = 'red';
@@ -34,7 +34,7 @@
   function timeout(){
     if (--counter > 0) return setTimeout(timeout, 1000);
     toastStatus = false;
-    goto('/ops');
+   // goto('/ops');
 }
 </script>
 <html class="dark" lang="en">
