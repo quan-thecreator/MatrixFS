@@ -59,7 +59,12 @@ fn generate_random_string(length: usize) -> String {
 fn main() {
     simple_logger::init_with_level(log::Level::Info).unwrap();
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![test_endpoints, log_message, package_existing_file_mfs])
+        .invoke_handler(tauri::generate_handler![
+            test_endpoints,
+            log_message,
+            package_existing_file_mfs,
+            download_file_mfs
+        ])
         //.invoke_handler(tauri::generate_handler![log_message])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -117,10 +122,12 @@ fn package_existing_file_mfs() -> Option<String> {
 
     // Read the file contents into a buffer
     file.read_to_end(&mut contents).unwrap();
-    let part = reqwest::blocking::multipart::Part::bytes(contents).file_name(get_file_name_string(destinatino_file.clone()));
+    let part = reqwest::blocking::multipart::Part::bytes(contents)
+        .file_name(get_file_name_string(destinatino_file.clone()));
     let form = reqwest::blocking::multipart::Form::new().part("file", part);
     let client = reqwest::blocking::Client::new();
-    let response: reqwest::blocking::Response = client.post("http://127.0.0.1:5001/api/v0/add")
+    let response: reqwest::blocking::Response = client
+        .post("http://127.0.0.1:5001/api/v0/add")
         .multipart(form)
         .send()
         .unwrap();
@@ -138,11 +145,11 @@ fn package_existing_file_mfs() -> Option<String> {
     return Some(to_construct.construct_hash());
 }
 #[derive(Serialize, Deserialize)]
-struct AddResponseJSON{
-   //bytes: String,
+struct AddResponseJSON {
+    //bytes: String,
     Hash: String,
     Name: String,
-    Size: String
+    Size: String,
 }
 
 #[tauri::command]
@@ -277,8 +284,33 @@ fn get_file_name(path_str: &str) -> &str {
     let path = Path::new(path_str);
     return path.file_name().unwrap().to_str().unwrap();
 }
-fn get_file_name_string(path_string: String) -> String{
+fn get_file_name_string(path_string: String) -> String {
     let path = PathBuf::from(path_string);
     return path.file_name().unwrap().to_string_lossy().into_owned();
+}
+#[tauri::command]
+fn download_file_mfs(mfs_hash: String) -> String{
+    let matrix_fs_hash:String = String::from(mfs_hash.trim());
+    let deconstructed = MatrixFSHash::deconstruct_hash(matrix_fs_hash);
+    let mut path = get_current_directory();
+    path.push_str("/");
+    path.push_str(deconstructed.file_name.as_str());
+    path.push_str(".mfs");
+    let mut url: String = String::from("http://127.0.0.1:8080/ipfs/");
+    url.push_str(deconstructed.ipfs_hash.as_str());
 
+    download_file(path.as_str(), url.as_str());
+    let mut path_new: String = get_current_directory();
+    path_new.push_str("/");
+    path_new.push_str(deconstructed.file_name.as_str());
+    let key_string: String = deconstructed.aes_encryption_key.clone();
+
+    let mut key_bytes = [0u8; 32];
+    key_bytes.copy_from_slice(&key_string.as_bytes()[0..32]);
+    let nonce_string: String = deconstructed.nonce.clone();
+
+    let mut nonce = [0u8; 19];
+    nonce.copy_from_slice(&nonce_string.as_bytes()[0..19]);
+    decrypt_large_file(path.as_str(), path_new.as_str(), &key_bytes, &nonce).unwrap();
+    return path_new;
 }

@@ -4,6 +4,7 @@
   import { invoke } from '@tauri-apps/api/tauri';
   import { fly } from 'svelte/transition';
   import CopyBox from '$lib/components/CopyBox.svelte';
+  import { Input, Label, Helper } from 'flowbite-svelte';
   let result = null;
   let counter = 5;
   let toastStatus = false;
@@ -34,9 +35,14 @@
     </div>
     
     <Button on:click="{_package}" pill>Get Started!</Button>
-    <br>
-    <CopyBox text="{displayedText}"/>
-    <Toast color="red" dismissable={true} transition={fly} params={{x:200}} bind:toastStatus position="top-right">
+      <div>
+  <Label class="space-y-2">
+  <br>
+  <span>Hash to be used with other matrixfs clients</span>
+  <Input type="text" placeholder="MatrixFS Hash" size="md" disabled bind:value={displayedText}/>
+</Label>
+</div>
+       <Toast color="red" dismissable={true} transition={fly} params={{x:200}} bind:toastStatus position="top-right">
       <svelte:fragment slot="icon">
         <CloseCircleSolid class="w-5 h-5" />
         <span class="sr-only">Error icon</span>
