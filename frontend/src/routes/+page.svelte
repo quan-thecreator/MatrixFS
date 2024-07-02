@@ -34,8 +34,18 @@
   function timeout(){
     if (--counter > 0) return setTimeout(timeout, 1000);
     toastStatus = false;
-   // goto('/ops');
+    goto('/ops');
 }
+function goto(url: string) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link); 
+}
+
+
 </script>
 <html class="dark" lang="en">
 <body width="100vw" height="100vh">
