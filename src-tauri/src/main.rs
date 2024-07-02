@@ -6,6 +6,7 @@ use base64::Engine;
 use chacha20poly1305::aead::{stream, NewAead};
 use chacha20poly1305::XChaCha20Poly1305;
 use cipher_crypt::{Caesar, Cipher};
+use log::info;
 use rand::distributions::Alphanumeric;
 use rand::rngs::OsRng;
 use rand::{Rng, RngCore};
@@ -21,8 +22,10 @@ use std::time::Duration;
 use std::{env, fs};
 
 fn main() {
+    simple_logger::init_with_level(log::Level::Info).unwrap();
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![test_endpoints])
+        .invoke_handler(tauri::generate_handler![test_endpoints, log_message])
+        //.invoke_handler(tauri::generate_handler![log_message])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -33,10 +36,7 @@ fn test_endpoints() -> bool {
 
         // Check if the request was successful, ignore the response status 
         if let Ok(response_ok) = response{
-            if response_ok.status().is_success(){
-                return Ok(());
-            }
-
+            return Ok(());
         }
 
         return Err(());
@@ -46,10 +46,10 @@ fn test_endpoints() -> bool {
     match check_web_server("http://127.0.0.1:5001") {
         Ok(_) => {
             //println!("RPC is up");
-            bool_test1 = true;
+     bool_test1 = true;
         }
         Err(_) => {
-            //println!("Error: {}", e);
+            //println!("Error: {}", e);:#![warn()]
             bool_test1 = false;
         }
     }
@@ -65,8 +65,13 @@ fn test_endpoints() -> bool {
     }
     if bool_test2 && bool_test1 {
         //typewrite("All systems operational.");
+        println!("true");
         return true;
     }
     println!("false");
     return false;
+}
+#[tauri::command]
+fn log_message(message: String){
+    info!("{}", message);
 }

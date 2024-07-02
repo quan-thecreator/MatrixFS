@@ -1,20 +1,25 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import { Alert, Badge, Indicator } from 'flowbite-svelte';
   import { invoke } from '@tauri-apps/api/tauri';
   import { P, GradientButton, Toast } from 'flowbite-svelte';
   import { CheckCircleSolid } from 'flowbite-svelte-icons';
   import { slide } from 'svelte/transition';
-  let endpoints = false;
+  import { goto } from '@sveltejs/kit';
+  let endpoints: boolean = false;
   let available='Unavailable';
   let color = 'red';
   let toastStatus = false;
   let counter = 5;
-
+  let message: String = "";
   async function test_endpoints(){
-    
-    endpoints = invoke('test_endpoints', { });
+ // message = "running";
+  //invoke('log_message', { message });
+  
+    endpoints = await invoke('test_endpoints', { });
+    invoke('log_message', { message: "endpoints message: " + endpoints })
     if(endpoints == true){
+      //invoke('log_message',{ message: 'Hello' });
       color = 'green';
       available = 'Available';
       toastStatus = true;
@@ -29,7 +34,7 @@
   function timeout(){
     if (--counter > 0) return setTimeout(timeout, 1000);
     toastStatus = false;
-
+    goto('/ops');
 }
 </script>
 <html class="dark" lang="en">
@@ -44,9 +49,9 @@
     </div>
     <div class="flex gap-10">
   
-  <Toast dismissable={true} transition={slide} bind:toastStatus>
+  <Toast dismissable={true} transition={slide} bind:toastStatus position="bottom-right">
     <CheckCircleSolid slot="icon" class="w-5 h-5" />
-    It is now available
+    The main operations page is now available
   </Toast>
 </div>
     </body>
