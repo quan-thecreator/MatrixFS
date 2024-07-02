@@ -3,10 +3,12 @@
   import { ArchiveSolid, ArrowDownToBracketOutline, CloseCircleSolid } from 'flowbite-svelte-icons';
   import { invoke } from '@tauri-apps/api/tauri';
   import { fly } from 'svelte/transition';
+  import CopyBox from '$lib/components/CopyBox.svelte';
   let result = null;
   let counter = 5;
   let toastStatus = false;
   let copyStatus = false;
+  let displayedText: String = "Loading ....";
   async function _package(){
     invoke('log_message', {message: "package is running"});
     result = await invoke('package_existing_file_mfs', { } );
@@ -15,7 +17,7 @@
       timeout();
     }
     else{
-      
+      displayedText=result;
     }
   }
   function timeout(){
@@ -31,10 +33,10 @@
       Package
     </div>
     
-
-
     <Button on:click="{_package}" pill>Get Started!</Button>
-    <Toast color="red" dismissable={true} transition={fly} params={{x:200}} bind:toastStatus>
+    <br>
+    <CopyBox text="{displayedText}"/>
+    <Toast color="red" dismissable={true} transition={fly} params={{x:200}} bind:toastStatus position="top-right">
       <svelte:fragment slot="icon">
         <CloseCircleSolid class="w-5 h-5" />
         <span class="sr-only">Error icon</span>
@@ -42,29 +44,16 @@
       Not valid
     </Toast>
   </TabItem>
-
-
-
   <TabItem>
     <div slot="title" class="flex items-center gap-2">
       <ArrowDownToBracketOutline size="md" />
       Download
     </div>
-
-
-
     <p class="text-sm text-gray-500 dark:text-gray-400">
       <b>Settings:</b>
       Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
     </p>
-
-
-
   </TabItem>
-
-
-
-
 </Tabs>
   </body>
 </html>

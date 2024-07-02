@@ -59,7 +59,7 @@ fn generate_random_string(length: usize) -> String {
 fn main() {
     simple_logger::init_with_level(log::Level::Info).unwrap();
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![test_endpoints, log_message])
+        .invoke_handler(tauri::generate_handler![test_endpoints, log_message, package_existing_file_mfs])
         //.invoke_handler(tauri::generate_handler![log_message])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -124,6 +124,8 @@ fn package_existing_file_mfs() -> Option<String> {
         .multipart(form)
         .send()
         .unwrap();
+    //let text_cloen = response.text().unwrap().clone();
+    //println!("{}",text_cloen);
     let add_response: AddResponseJSON = response.json().unwrap();
 
     ipfs_hash = add_response.Hash;
@@ -137,7 +139,7 @@ fn package_existing_file_mfs() -> Option<String> {
 }
 #[derive(Serialize, Deserialize)]
 struct AddResponseJSON{
-   Bytes: String,
+   //bytes: String,
     Hash: String,
     Name: String,
     Size: String
