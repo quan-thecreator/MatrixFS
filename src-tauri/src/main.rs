@@ -68,7 +68,7 @@ fn main() {
 // invoke this command when wanting to get a new file on the network
 
 #[tauri::command]
-fn package_existing_file() -> Option<String> {
+fn package_existing_file_mfs() -> Option<String> {
     let mut path_to_file = String::new();
     let files = FileDialog::new()
         .set_directory(get_current_directory().as_str())
