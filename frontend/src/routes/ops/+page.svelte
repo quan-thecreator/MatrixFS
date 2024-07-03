@@ -25,6 +25,14 @@
     if (--counter > 0) return setTimeout(timeout, 1000);
     toastStatus = false;
   }
+  let hash = '';
+  let new_file_path = '';
+  const handleSubmit = async (event: Event) => {
+    event.preventDefault();
+    new_file_path = await invoke('download_file_mfs', { mfs_hash: hash })
+    invoke('log_message', { message: "The new file path: "+ new_file_path })
+};
+
 </script><html class="dark" lang="en">
   <body width="100vw" height="100vh">
 <Tabs>
@@ -55,11 +63,15 @@
       <ArrowDownToBracketOutline size="md" />
       Download
     </div>
-    <p class="text-sm text-gray-500 dark:text-gray-400">
-      <b>Settings:</b>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-    </p>
-  </TabItem>
+   <form class="w-full max-w-lg" on:submit={handleSubmit}>
+    <div class="mb-6">
+        <Label for="hash">MatrixFS hash</Label>
+        <Input type="text" id="hash" bind:value={hash} required />
+    </div>
+    
+    <Button type="submit">Submit</Button>
+</form>     
+      </TabItem>
 </Tabs>
   </body>
 </html>
