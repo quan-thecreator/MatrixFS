@@ -26,10 +26,13 @@
     toastStatus = false;
   }
   let hash = '';
-  let new_file_path = '';
-  const handleSubmit = async (event: Event) => {
+  let new_file_path: String = '';
+  async function handleSubmit() {
+    invoke('log_message', { message: "Mukund may have some merit"});
     event.preventDefault();
-    new_file_path = await invoke('download_file_mfs', { mfs_hash: hash })
+    invoke('log_message', { message: "Not entirley stupid, hash: " + hash});
+    //let mfs_hash: String = hash as String;
+    new_file_path = await invoke('download_file_mfs', { mfsHash: hash });
     invoke('log_message', { message: "The new file path: "+ new_file_path })
 };
 

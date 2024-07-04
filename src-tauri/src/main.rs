@@ -290,6 +290,8 @@ fn get_file_name_string(path_string: String) -> String {
 }
 #[tauri::command]
 fn download_file_mfs(mfs_hash: String) -> String{
+    println!("Alternate print test");
+    info!("File download is executing");
     let matrix_fs_hash:String = String::from(mfs_hash.trim());
     let deconstructed = MatrixFSHash::deconstruct_hash(matrix_fs_hash);
     let mut path = get_current_directory();
@@ -300,9 +302,11 @@ fn download_file_mfs(mfs_hash: String) -> String{
     url.push_str(deconstructed.ipfs_hash.as_str());
 
     download_file(path.as_str(), url.as_str());
+    info!("File downloaded to path: {}", path.clone());
     let mut path_new: String = get_current_directory();
     path_new.push_str("/");
     path_new.push_str(deconstructed.file_name.as_str());
+    info!("Attempting to decrypt to {}", path_new.clone());
     let key_string: String = deconstructed.aes_encryption_key.clone();
 
     let mut key_bytes = [0u8; 32];
@@ -312,5 +316,6 @@ fn download_file_mfs(mfs_hash: String) -> String{
     let mut nonce = [0u8; 19];
     nonce.copy_from_slice(&nonce_string.as_bytes()[0..19]);
     decrypt_large_file(path.as_str(), path_new.as_str(), &key_bytes, &nonce).unwrap();
+    info!("Finished all downloading and decrypting processes");
     return path_new;
 }
