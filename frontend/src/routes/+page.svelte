@@ -7,6 +7,7 @@
   import { slide } from 'svelte/transition';
 
   let endpoints: boolean = false;
+  let proxy: boolean = false;
   let available = 'Unavailable';
   let badgeColorClass = 'bg-red-500';
   let indicatorColor = 'red';
@@ -15,8 +16,9 @@
 
   async function test_endpoints() {
     endpoints = await invoke('test_endpoints');
+    proxy = await invoke('test_proxy');
     invoke('log_message', { message: "endpoints message: " + endpoints });
-    if (endpoints) {
+    if (endpoints && proxy) {
       badgeColorClass = 'bg-green-500';
       indicatorColor = 'green';
       available = 'Available';
@@ -62,7 +64,12 @@
 </svg>
     
     <div on:load={test_endpoints} style="padding-left: 5%;">
-      {#if available == "Unavailable"}
+      {#if proxy == false && endpoints == false}
+        <Label class="space-y-2">
+          <br>
+          <span style="opacity:1;color:white;">Install and Setup Tor</span>
+          <Input type="text" size="md" disabled value="https://www.youtube.com/watch?v=fJrUw35Qvb4" class="w-8/12"/>
+        </Label>
         <Label class="space-y-2">
           <br>
           <span style="opacity:1;color:white;">Install the ipfs desktop app:</span>
@@ -70,12 +77,50 @@
         </Label>
          <span style="opacity:1;color:white;">Then, hit the "Re-Test" button</span>
       {/if}
-      <div style="display:flex;padding-top:5px">
+      {#if endpoints == false && proxy == true}
+        <Label class="space-y-2">
+          <br>
+          <span style="opacity:1;color:white;">Install the ipfs desktop app:</span>
+          <Input type="text" size="md" disabled value="https://docs.ipfs.tech/install/ipfs-desktop/" class="w-8/12"/>
+        </Label>
+         <span style="opacity:1;color:white;">Then, hit the "Re-Test" button</span>
+      {/if}
+       {#if proxy == false && endpoints == true}
+        <Label class="space-y-2">
+          <br>
+          <span style="opacity:1;color:white;">Install and Setup Tor</span>
+          <Input type="text" size="md" disabled value="https://www.youtube.com/watch?v=fJrUw35Qvb4" class="w-8/12"/>
+        </Label>
+         <span style="opacity:1;color:white;">Then, hit the "Re-Test" button</span>
+      {/if}
+      
+    <div style="display:flex;padding-top:5px">
       <P size="base">IPFS facilities are:</P>
-      <Badge rounded class="px-2.5 py-0.5 {badgeColorClass}" style="margin-left: 10px;">
-        <Indicator color={indicatorColor} size="xs" class="me-1" />{available}
+      {#if endpoints == true}
+        <Badge rounded class="px-2.5 py-0.5" color="green" style="margin-left: 10px;">
+          <Indicator color="green" size="xs" class="me-1" /> Available
+        </Badge>
+      {/if}
+      {#if endpoints == false}
+          <Badge rounded class="px-2.5 py-0.5" color="red" style="margin-left: 10px;">
+        <Indicator color="red" size="xs" class="me-1" />Not Available
       </Badge>
+      {/if}
+    </div>
+      <div style="display:flex;padding-top:5px">
+      <P size="base">Tor Proxy facilities are:</P>
+      {#if proxy == true}
+      <Badge rounded class="px-2.5 py-0.5" color="green" style="margin-left: 10px;">
+        <Indicator color="green" size="xs" class="me-1" />Available
+      </Badge>
+      {/if}
+      {#if proxy == false}
+          <Badge rounded class="px-2.5 py-0.5" color="red" style="margin-left: 10px;">
+        <Indicator color="red" size="xs" class="me-1" />Not Available
+      </Badge>
+      {/if}
         </div>
+
     </div>
     <div style="padding-left: 5%;">
       <GradientButton on:click="{test_endpoints}">Re-Test</GradientButton>
