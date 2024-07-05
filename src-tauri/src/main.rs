@@ -10,6 +10,8 @@ use log::info;
 use rand::distributions::Alphanumeric;
 use rand::rngs::OsRng;
 use rand::{Rng, RngCore};
+use reqwest::header::HeaderName;
+use reqwest::{Method, Proxy, StatusCode};
 use rfd::FileDialog;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -17,6 +19,7 @@ use std::fmt::format;
 use std::fs::File;
 use std::io::{stdin, stdout, BufReader, BufWriter, Bytes, Cursor, Read, Write};
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
@@ -63,7 +66,8 @@ fn main() {
             test_endpoints,
             log_message,
             package_existing_file_mfs,
-            download_file_mfs
+            download_file_mfs,
+            test_proxy
         ])
         //.invoke_handler(tauri::generate_handler![log_message])
         .run(tauri::generate_context!())
@@ -318,4 +322,49 @@ fn download_file_mfs(mfs_hash: String) -> String{
     decrypt_large_file(path.as_str(), path_new.as_str(), &key_bytes, &nonce).unwrap();
     info!("Finished all downloading and decrypting processes");
     return path_new;
+}
+
+// database stuff
+#[derive(Serialize, Deserialize, Debug)]
+struct Hashes{
+    description: String,
+    hash: String,
+    id: String,
+    tag: String,
+    title: String,
+    time_unix: i128
+}
+fn construct_db_client() -> Result<reqwest::blocking::Client, String>{
+    let socks_url: &str = "socks5://127.0.0.1:9050";
+    let proxy = reqwest::Proxy::all(socks_url);
+    if proxy.is_err(){
+        return Err(String::from("Proxy failed to conenct"));
+    }
+    let mut client = reqwest::blocking::ClientBuilder::new()
+        .proxy(proxy.unwrap())
+        .build();
+    if client.is_ok(){
+        return Ok(client.unwrap());
+    }else{
+        return Err(String::from("failed to create"));
+    }
+}
+#[tauri::command]
+fn test_proxy() -> bool{
+    let construction_result = construct_db_client();
+    if construction_result.is_err(){
+        return false;
+    }
+    let blocking_client: reqwest::blocking::Client = construction_result.unwrap();
+    let response_result = blocking_client.request(Method::GET, "http://givx4pbz7ufm5uwewpvcn3hlxjdtw6v4out3mrhjexatlmh2avqv3jyd.onion/status")
+        .basic_auth("trash", Some("mfs"))
+        .send();
+    if response_result.is_err(){
+        return false;
+    }
+    let response_object: reqwest::blocking::Response = response_result.unwrap();
+    if response_object.status()==StatusCode::from_u16(200).unwrap(){
+        return true;
+    }
+    return false;
 }
