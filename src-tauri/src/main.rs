@@ -10,7 +10,7 @@ use log::{error, info};
 use rand::distributions::Alphanumeric;
 use rand::rngs::OsRng;
 use rand::{Rng, RngCore};
-use reqwest::header::HeaderName;
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::{Method, Proxy, StatusCode};
 use rfd::FileDialog;
 use serde::{Deserialize, Serialize};
@@ -67,7 +67,8 @@ fn main() {
             log_message,
             package_existing_file_mfs,
             download_file_mfs,
-            test_proxy
+            test_proxy,
+            recall_latest_hashes
         ])
         //.invoke_handler(tauri::generate_handler![log_message])
         .run(tauri::generate_context!())
@@ -326,13 +327,18 @@ fn download_file_mfs(mfs_hash: String) -> String{
 
 // database stuff
 #[derive(Serialize, Deserialize, Debug)]
-struct Hashes{
+struct Hash{
     description: String,
     hash: String,
     id: String,
     tag: String,
     title: String,
     time_unix: i128
+}
+#[derive(Serialize, Deserialize, Debug)]
+struct Tag{
+    id: String,
+    name: String
 }
 fn construct_db_client() -> Result<reqwest::blocking::Client, String>{
     let socks_url: &str = "socks5h://127.0.0.1:9050";
@@ -375,4 +381,37 @@ fn test_proxy() -> bool{
     error!("Status code: {:#?}", response_object.status());
     error!("returning false - test_proxy 3");
     return false;
+}
+fn execute_sql_query(sql: String) -> Result<reqwest::blocking::Response, String>{
+    let construction_result = construct_db_client();
+    if construction_result.is_err(){
+        error!("construction db client failure");
+        return Err(String::from("failed to construct DB client"));
+    }
+    let mut default_header_map: HeaderMap<HeaderValue> = HeaderMap::new();
+    default_header_map.append(reqwest::header::ACCEPT, "application/json".parse().unwrap());
+    default_header_map.append(HeaderName::from_str("NS").unwrap(), "matrixfs".parse().unwrap());
+    default_header_map.append(HeaderName::from_str("DB").unwrap(), "hashes".parse().unwrap());
+    let blocking_client: reqwest::blocking::Client = construction_result.unwrap();
+    let reponse_result = blocking_client.request(Method::POST, "http://givx4pbz7ufm5uwewpvcn3hlxjdtw6v4out3mrhjexatlmh2avqv3jyd.onion:62397/sql")
+        .basic_auth("trash", Some("mfs"))
+        .headers(default_header_map)
+        .body(sql)
+        .send();
+
+    if reponse_result.is_err(){
+        error!("Request errored out");
+        return Err(String::from("request errored out"));
+    }
+    return Ok(reponse_result.unwrap());
+}
+#[tauri::command]
+fn recall_latest_hashes() -> Vec<Hash>{
+    let query_execution_result = execute_sql_query(String::from("SELECT * FROM hashes ORDER BY time_unix DESC LIMIT 5;"));
+    if query_execution_result.is_err(){
+        return Vec::new();
+    }
+    let blocking_response: reqwest::blocking::Response = query_execution_result.unwrap();
+    let hashes: Vec<Hash> = blocking_response.json().expect("Uhh something went wrong");
+    return hashes;
 }
