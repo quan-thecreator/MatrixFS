@@ -14,7 +14,7 @@ use reqwest::header::HeaderName;
 use reqwest::{Method, Proxy, StatusCode};
 use rfd::FileDialog;
 use serde::{Deserialize, Serialize};
-use std::error::Error;
+use std::error::{self, Error};
 use std::fmt::format;
 use std::fs::File;
 use std::io::{stdin, stdout, BufReader, BufWriter, Bytes, Cursor, Read, Write};
@@ -335,7 +335,7 @@ struct Hashes{
     time_unix: i128
 }
 fn construct_db_client() -> Result<reqwest::blocking::Client, String>{
-    let socks_url: &str = "socks5://127.0.0.1:9050";
+    let socks_url: &str = "socks5h://127.0.0.1:9050";
     let proxy = reqwest::Proxy::all(socks_url);
     if proxy.is_err(){
         error!("Proxy failed to connect: {} ", proxy.err().unwrap());
@@ -361,16 +361,18 @@ fn test_proxy() -> bool{
     }
     let blocking_client: reqwest::blocking::Client = construction_result.unwrap();
     let response_result = blocking_client.request(Method::GET, "http://givx4pbz7ufm5uwewpvcn3hlxjdtw6v4out3mrhjexatlmh2avqv3jyd.onion:62397/status")
-        .basic_auth("trash", Some("mfs"))
+        //.basic_auth("trash", Some("mfs"))
         .send();
     if response_result.is_err(){
-        error!("Returning false - test_proxy 2, {}", response_result.err().unwrap());
+        error!("Returning false - test_proxy 2, {:#?}", response_result.err().unwrap());
         return false;
     }
     let response_object: reqwest::blocking::Response = response_result.unwrap();
     if response_object.status()==StatusCode::from_u16(200).unwrap(){
+        info!("returning true!");
         return true;
     }
+    error!("Status code: {:#?}", response_object.status());
     error!("returning false - test_proxy 3");
     return false;
 }
