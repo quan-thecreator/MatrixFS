@@ -6,7 +6,7 @@ use base64::Engine;
 use chacha20poly1305::aead::{stream, NewAead};
 use chacha20poly1305::XChaCha20Poly1305;
 use cipher_crypt::{Caesar, Cipher};
-use log::info;
+use log::{error, info};
 use rand::distributions::Alphanumeric;
 use rand::rngs::OsRng;
 use rand::{Rng, RngCore};
@@ -338,14 +338,17 @@ fn construct_db_client() -> Result<reqwest::blocking::Client, String>{
     let socks_url: &str = "socks5://127.0.0.1:9050";
     let proxy = reqwest::Proxy::all(socks_url);
     if proxy.is_err(){
+        error!("Proxy failed to connect: {} ", proxy.err().unwrap());
         return Err(String::from("Proxy failed to conenct"));
     }
     let mut client = reqwest::blocking::ClientBuilder::new()
         .proxy(proxy.unwrap())
+        .connect_timeout(Some(Duration::from_secs(30)))
         .build();
     if client.is_ok(){
         return Ok(client.unwrap());
     }else{
+        error!("Failed creation of db client: {}", client.err().unwrap());
         return Err(String::from("failed to create"));
     }
 }
@@ -353,18 +356,21 @@ fn construct_db_client() -> Result<reqwest::blocking::Client, String>{
 fn test_proxy() -> bool{
     let construction_result = construct_db_client();
     if construction_result.is_err(){
+        error!("returning false - test_proxy 1");
         return false;
     }
     let blocking_client: reqwest::blocking::Client = construction_result.unwrap();
-    let response_result = blocking_client.request(Method::GET, "http://givx4pbz7ufm5uwewpvcn3hlxjdtw6v4out3mrhjexatlmh2avqv3jyd.onion/status")
+    let response_result = blocking_client.request(Method::GET, "http://givx4pbz7ufm5uwewpvcn3hlxjdtw6v4out3mrhjexatlmh2avqv3jyd.onion:62397/status")
         .basic_auth("trash", Some("mfs"))
         .send();
     if response_result.is_err(){
+        error!("Returning false - test_proxy 2, {}", response_result.err().unwrap());
         return false;
     }
     let response_object: reqwest::blocking::Response = response_result.unwrap();
     if response_object.status()==StatusCode::from_u16(200).unwrap(){
         return true;
     }
+    error!("returning false - test_proxy 3");
     return false;
 }
