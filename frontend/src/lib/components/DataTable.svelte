@@ -7,7 +7,7 @@
   export let paginationData: Array;
   export let tags;
   console.log(paginationData);
-  let divClass='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden';
+  let divClass='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg w-full';
   let innerDivClass='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4 w-full';
   let searchClass='w-full md:w-1/2 relative';
   let svgDivClass='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none';
@@ -67,7 +67,7 @@
   });
 
   $: currentPageItems = paginationData.slice(currentPosition, currentPosition + itemsPerPage);
-  const filteredItems = paginationData.filter((item) => {
+  $: filteredItems = paginationData.filter((item) => {
   let searchTermLower = searchTerm.toLowerCase();
   return (
     item.title.toLowerCase().indexOf(searchTermLower) !== -1 ||
@@ -101,12 +101,12 @@
         <TableHeadCell padding="px-4 py-3" scope="col">{header}</TableHeadCell>
         {/each}
       </TableHead>
-      <TableBody class="divide-y">
+      <TableBody class="divide-y divide-x">
         {#if searchTerm !== ''}
           {#each filteredItems as item (item.id)}
             <TableBodyRow>
             {#each paginationDataHeaders as header}
-              <TableBodyCell tdClass="px-4 py-3">{item[header]}</TableBodyCell>
+              <TableBodyCell tdClass="px-2 py-2">{item[header]}</TableBodyCell>
             {/each}
             </TableBodyRow>
           {/each}
@@ -114,7 +114,7 @@
           {#each filteredItems as item (item.id)}
             <TableBodyRow>
             {#each paginationDataHeaders as header}
-              <TableBodyCell tdClass="px-4 py-3">{item[header]}</TableBodyCell>
+              <TableBodyCell tdClass="px-2 py-2">{item[header]}</TableBodyCell>
             {/each}
             </TableBodyRow>
           {/each}

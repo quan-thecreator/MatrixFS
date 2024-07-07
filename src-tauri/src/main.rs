@@ -296,10 +296,10 @@ fn get_file_name_string(path_string: String) -> String {
     return path.file_name().unwrap().to_string_lossy().into_owned();
 }
 #[tauri::command]
-fn download_file_mfs(mfs_hash: String) -> String{
+fn download_file_mfs(mfs_hash: String) -> String {
     println!("Alternate print test");
     info!("File download is executing");
-    let matrix_fs_hash:String = String::from(mfs_hash.trim());
+    let matrix_fs_hash: String = String::from(mfs_hash.trim());
     let deconstructed = MatrixFSHash::deconstruct_hash(matrix_fs_hash);
     let mut path = get_current_directory();
     path.push_str("/");
@@ -329,29 +329,29 @@ fn download_file_mfs(mfs_hash: String) -> String{
 
 // database stuff
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct Hash{
+struct Hash {
+    id: String,
+    title: String,
     description: String,
     hash: String,
-    id: String,
     tag: String,
-    title: String,
-    time_unix: i128
+    time_unix: i128,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct Tag{
+struct Tag {
     id: String,
-    name: String
+    name: String,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct SurrealArrayWrapper<T>{
+struct SurrealArrayWrapper<T> {
     result: Vec<T>,
     status: String,
-    time: String
+    time: String,
 }
-fn construct_db_client() -> Result<reqwest::blocking::Client, String>{
+fn construct_db_client() -> Result<reqwest::blocking::Client, String> {
     let socks_url: &str = "socks5h://127.0.0.1:9050";
     let proxy = reqwest::Proxy::all(socks_url);
-    if proxy.is_err(){
+    if proxy.is_err() {
         error!("Proxy failed to connect: {} ", proxy.err().unwrap());
         return Err(String::from("Proxy failed to conenct"));
     }
@@ -359,30 +359,37 @@ fn construct_db_client() -> Result<reqwest::blocking::Client, String>{
         .proxy(proxy.unwrap())
         .connect_timeout(Some(Duration::from_secs(30)))
         .build();
-    if client.is_ok(){
+    if client.is_ok() {
         return Ok(client.unwrap());
-    }else{
+    } else {
         error!("Failed creation of db client: {}", client.err().unwrap());
         return Err(String::from("failed to create"));
     }
 }
 #[tauri::command]
-fn test_proxy() -> bool{
+fn test_proxy() -> bool {
     let construction_result = construct_db_client();
-    if construction_result.is_err(){
+    if construction_result.is_err() {
         error!("returning false - test_proxy 1");
         return false;
     }
     let blocking_client: reqwest::blocking::Client = construction_result.unwrap();
-    let response_result = blocking_client.request(Method::GET, "http://givx4pbz7ufm5uwewpvcn3hlxjdtw6v4out3mrhjexatlmh2avqv3jyd.onion:62397/status")
+    let response_result = blocking_client
+        .request(
+            Method::GET,
+            "http://givx4pbz7ufm5uwewpvcn3hlxjdtw6v4out3mrhjexatlmh2avqv3jyd.onion:62397/status",
+        )
         //.basic_auth("trash", Some("mfs"))
         .send();
-    if response_result.is_err(){
-        error!("Returning false - test_proxy 2, {:#?}", response_result.err().unwrap());
+    if response_result.is_err() {
+        error!(
+            "Returning false - test_proxy 2, {:#?}",
+            response_result.err().unwrap()
+        );
         return false;
     }
     let response_object: reqwest::blocking::Response = response_result.unwrap();
-    if response_object.status()==StatusCode::from_u16(200).unwrap(){
+    if response_object.status() == StatusCode::from_u16(200).unwrap() {
         info!("returning true!");
         return true;
     }
@@ -390,60 +397,97 @@ fn test_proxy() -> bool{
     error!("returning false - test_proxy 3");
     return false;
 }
-fn execute_sql_query(sql: String) -> Result<reqwest::blocking::Response, String>{
+fn execute_sql_query(sql: String) -> Result<reqwest::blocking::Response, String> {
     let construction_result = construct_db_client();
-    if construction_result.is_err(){
+    if construction_result.is_err() {
         error!("construction db client failure");
         return Err(String::from("failed to construct DB client"));
     }
     let mut default_header_map: HeaderMap<HeaderValue> = HeaderMap::new();
     default_header_map.append(reqwest::header::ACCEPT, "application/json".parse().unwrap());
-    default_header_map.append(HeaderName::from_str("NS").unwrap(), "matrixfs".parse().unwrap());
-    default_header_map.append(HeaderName::from_str("DB").unwrap(), "hashes".parse().unwrap());
+    default_header_map.append(
+        HeaderName::from_str("NS").unwrap(),
+        "matrixfs".parse().unwrap(),
+    );
+    default_header_map.append(
+        HeaderName::from_str("DB").unwrap(),
+        "hashes".parse().unwrap(),
+    );
     let blocking_client: reqwest::blocking::Client = construction_result.unwrap();
-    let reponse_result = blocking_client.request(Method::POST, "http://givx4pbz7ufm5uwewpvcn3hlxjdtw6v4out3mrhjexatlmh2avqv3jyd.onion:62397/sql")
+    let reponse_result = blocking_client
+        .request(
+            Method::POST,
+            "http://givx4pbz7ufm5uwewpvcn3hlxjdtw6v4out3mrhjexatlmh2avqv3jyd.onion:62397/sql",
+        )
         .basic_auth("trash", Some("mfs"))
         .headers(default_header_map)
         .body(sql)
         .send();
 
-    if reponse_result.is_err(){
+    if reponse_result.is_err() {
         error!("Request errored out");
         return Err(String::from("request errored out"));
     }
     return Ok(reponse_result.unwrap());
 }
 #[tauri::command]
-fn recall_latest_hashes() -> Vec<Hash>{
-    let query_execution_result = execute_sql_query(String::from("SELECT * FROM hashes ORDER BY time_unix DESC LIMIT 5;"));
-    if query_execution_result.is_err(){
+fn recall_latest_hashes() -> Vec<Hash> {
+    let query_execution_result = execute_sql_query(String::from(
+        "SELECT * FROM hashes ORDER BY time_unix DESC LIMIT 5;",
+    ));
+    if query_execution_result.is_err() {
         return Vec::new();
     }
     let blocking_response: reqwest::blocking::Response = query_execution_result.unwrap();
-    let hashes: Vec<SurrealArrayWrapper<Hash>> = blocking_response.json().expect("Uhh something went wrong");
+    let hashes: Vec<SurrealArrayWrapper<Hash>> =
+        blocking_response.json().expect("Uhh something went wrong");
     info!("returning: {:#?}", &hashes);
     return Vec::clone(&hashes.get(0).unwrap().result);
 }
 #[tauri::command]
-fn recall_all_hashes() -> Vec<Hash>{
-    let query_execution_result = execute_sql_query(String::from("SELECT * FROM hashes ORDER BY time_unix DESC;"));
-    if query_execution_result.is_err(){
+fn recall_all_hashes() -> Vec<Hash> {
+    let query_execution_result = execute_sql_query(String::from(
+        "SELECT * FROM hashes ORDER BY time_unix DESC;",
+    ));
+    if query_execution_result.is_err() {
         return Vec::new();
     }
     let blocking_response: reqwest::blocking::Response = query_execution_result.unwrap();
-    let hashes: Vec<SurrealArrayWrapper<Hash>> = blocking_response.json().expect("Uhh something went wrong");
+    let hashes: Vec<SurrealArrayWrapper<Hash>> =
+        blocking_response.json().expect("Uhh something went wrong");
     info!("returning: {:#?}", &hashes);
     return Vec::clone(&hashes.get(0).unwrap().result);
 }
 
 #[tauri::command]
-fn recall_tags() -> Vec<Tag>{
+fn recall_tags() -> Vec<Tag> {
     let query_execution_result = execute_sql_query(String::from("SELECT * FROM tags;"));
-    if query_execution_result.is_err(){
+    if query_execution_result.is_err() {
         return Vec::new();
     }
     let blocking_response: reqwest::blocking::Response = query_execution_result.unwrap();
-    let hashes: Vec<SurrealArrayWrapper<Tag>> = blocking_response.json().expect("Uhh something went wrong");
+    let hashes: Vec<SurrealArrayWrapper<Tag>> =
+        blocking_response.json().expect("Uhh something went wrong");
     info!("returning: {:#?}", &hashes);
     return Vec::clone(&hashes.get(0).unwrap().result);
+}
+#[tauri::command]
+fn add_hash_db(hash: String, title: String, description: String, tag: String) -> bool {
+    let query: String = format!(
+        "LET $exists = (SELECT count() FROM hashes WHERE hash = '{}');
+         IF $exists[0].count = 0 THEN (
+            CREATE hashes SET hash=string::replace(\"{}\",\" \",\"\"), title=\"{}\", description=\"{}\", tag={},time_unix=time::unix();
+            );", sanitize_string(hash.clone()),sanitize_string(hash), sanitize_string(title), sanitize_string(description), sanitize_string(tag));
+    let query_execution_result = execute_sql_query(query);
+    if query_execution_result.is_err() {
+        return false;
+    } else {
+        return true;
+    }
+}
+fn sanitize_string(string_to_sanitize: String) -> String {
+    return string_to_sanitize
+        .replace("\"", "")
+        .replace("\\", "")
+        .replace("-", "");
 }
