@@ -68,7 +68,9 @@ fn main() {
             package_existing_file_mfs,
             download_file_mfs,
             test_proxy,
-            recall_latest_hashes
+            recall_latest_hashes,
+            recall_all_hashes,
+            recall_tags
         ])
         //.invoke_handler(tauri::generate_handler![log_message])
         .run(tauri::generate_context!())
@@ -326,7 +328,7 @@ fn download_file_mfs(mfs_hash: String) -> String{
 }
 
 // database stuff
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct Hash{
     description: String,
     hash: String,
@@ -335,10 +337,16 @@ struct Hash{
     title: String,
     time_unix: i128
 }
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct Tag{
     id: String,
     name: String
+}
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct SurrealArrayWrapper<T>{
+    result: Vec<T>,
+    status: String,
+    time: String
 }
 fn construct_db_client() -> Result<reqwest::blocking::Client, String>{
     let socks_url: &str = "socks5h://127.0.0.1:9050";
@@ -412,6 +420,30 @@ fn recall_latest_hashes() -> Vec<Hash>{
         return Vec::new();
     }
     let blocking_response: reqwest::blocking::Response = query_execution_result.unwrap();
-    let hashes: Vec<Hash> = blocking_response.json().expect("Uhh something went wrong");
-    return hashes;
+    let hashes: Vec<SurrealArrayWrapper<Hash>> = blocking_response.json().expect("Uhh something went wrong");
+    info!("returning: {:#?}", &hashes);
+    return Vec::clone(&hashes.get(0).unwrap().result);
+}
+#[tauri::command]
+fn recall_all_hashes() -> Vec<Hash>{
+    let query_execution_result = execute_sql_query(String::from("SELECT * FROM hashes ORDER BY time_unix DESC;"));
+    if query_execution_result.is_err(){
+        return Vec::new();
+    }
+    let blocking_response: reqwest::blocking::Response = query_execution_result.unwrap();
+    let hashes: Vec<SurrealArrayWrapper<Hash>> = blocking_response.json().expect("Uhh something went wrong");
+    info!("returning: {:#?}", &hashes);
+    return Vec::clone(&hashes.get(0).unwrap().result);
+}
+
+#[tauri::command]
+fn recall_tags() -> Vec<Tag>{
+    let query_execution_result = execute_sql_query(String::from("SELECT * FROM tags;"));
+    if query_execution_result.is_err(){
+        return Vec::new();
+    }
+    let blocking_response: reqwest::blocking::Response = query_execution_result.unwrap();
+    let hashes: Vec<SurrealArrayWrapper<Tag>> = blocking_response.json().expect("Uhh something went wrong");
+    info!("returning: {:#?}", &hashes);
+    return Vec::clone(&hashes.get(0).unwrap().result);
 }

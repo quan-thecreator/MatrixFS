@@ -137,12 +137,12 @@
   <TableBody tableBodyClass="divide-y">
     {#each json as item (item.id)}
     <TableBodyRow>
-      <TableBodyCell>item.id</TableBodyCell>
-      <TableBodyCell>item.hash</TableBodyCell>
-      <TableBodyCell>item.title</TableBodyCell>
-      <TableBodyCell>item.description</TableBodyCell>
-      <TableBodyCell>item.tag</TableBodyCell>
-      <TableBodyCell>item.time</TableBodyCell>
+      <TableBodyCell>{item.id}</TableBodyCell>
+      <TableBodyCell>{item.hash}</TableBodyCell>
+      <TableBodyCell>{item.title}</TableBodyCell>
+      <TableBodyCell>{item.description}</TableBodyCell>
+      <TableBodyCell>{item.tag}</TableBodyCell>
+      <TableBodyCell>{item.time_unix}</TableBodyCell>
     </TableBodyRow>
     {/each}
     
