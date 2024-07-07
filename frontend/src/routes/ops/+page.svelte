@@ -75,7 +75,7 @@
     tags = await invoke('recall_tags');
     // time to reformat the json so its
   }
-getTabledata();
+getTableData();
 
 </script>
 
