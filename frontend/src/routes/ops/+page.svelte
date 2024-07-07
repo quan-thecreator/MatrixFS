@@ -3,12 +3,17 @@
   import { ArchiveSolid, ArrowDownToBracketOutline, CloseCircleSolid, CheckCircleSolid, ClipboardListSolid, TableRowSolid,PlusOutline, ChevronDownOutline, FilterSolid, ChevronRightOutline, ChevronLeftOutline } from 'flowbite-svelte-icons';
   import { Section } from 'flowbite-svelte-blocks';
   import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, TableSearch, Dropdown, DropdownItem, Checkbox, ButtonGroup } from 'flowbite-svelte';
+	import { onMount } from 'svelte';
 
   import { Timeline, TimelineItem, Activity, ActivityItem, Group, GroupItem } from 'flowbite-svelte';
   import { invoke } from '@tauri-apps/api/tauri';
   import { fly } from 'svelte/transition';
+  
   import { Input, Label } from 'flowbite-svelte';
-
+let paginationData;
+  onMount(async () =>{
+    paginationData= await invoke('recall_all_hashes');
+  });
   let result: string | null = null;
   let counter = 5;
   let toastStatus = false;
@@ -73,19 +78,19 @@
   let totalItems;
   let startPage;
   let endPage;
+  
   async function getTop5TableData(){
     console.log('running getTableData function');
     invoke('log_message', {message:"Running get table data function"});
     json = await invoke('recall_latest_hashes');
     
     // time to reformat the json so its
-    
 
   }
   async function getTableData(){
     console.log('running getTableData function');
     invoke('log_message', {message:"Running get table data function"});
-    paginationData = await invoke('recall_all_hashes');
+    //paginationData = await invoke('recall_all_hashes');
     tags = await invoke('recall_tags');
     totalItems = paginationData.length;
     // time to reformat the json so its
@@ -126,7 +131,7 @@
     currentPosition = (pageNumber - 1) * itemsPerPage;
     updateDataAndPagination();
   }
-  getTableData();
+  //getTableData();
   $: startRange = currentPosition + 1;
   $: endRange = Math.min(currentPosition + itemsPerPage, totalItems);
 
