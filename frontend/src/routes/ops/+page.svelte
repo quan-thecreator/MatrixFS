@@ -1,16 +1,13 @@
 <script lang="ts">
   import { Tabs, TabItem, Button, Toast } from 'flowbite-svelte';
-  import { ArchiveSolid, ArrowDownToBracketOutline, CloseCircleSolid, CheckCircleSolid, ClipboardListSolid, TableRowSolid,PlusOutline, ChevronDownOutline, FilterSolid, ChevronRightOutline, ChevronLeftOutline } from 'flowbite-svelte-icons';
-  import { Section } from 'flowbite-svelte-blocks';
+  import { ArchiveSolid, ArrowDownToBracketOutline, CloseCircleSolid, CheckCircleSolid, ClipboardListSolid, TableRowSolid } from 'flowbite-svelte-icons';
   import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from 'flowbite-svelte';
-	import { onMount } from 'svelte';
-  import { DataTable } from '$lib/components/DataTable.svelte';
-  import { Timeline, TimelineItem, Activity, ActivityItem, Group, GroupItem } from 'flowbite-svelte';
+  import { onMount } from 'svelte';
+  import DataTable from '$lib/components/DataTable.svelte';
   import { invoke } from '@tauri-apps/api/tauri';
   import { fly } from 'svelte/transition';
-  
   import { Input, Label } from 'flowbite-svelte';
-
+    import { Timeline, TimelineItem, Activity, ActivityItem, Group, GroupItem } from 'flowbite-svelte';
   let result: string | null = null;
   let counter = 5;
   let toastStatus = false;
@@ -57,37 +54,43 @@
     if (--counter1 > 0) return setTimeout(timeout1, 1000);
     toastStatus1 = false;
   }
-  let json = '';
+
+  let json = [];
   let tags = {};
   let paginationData;
+
   async function getTop5TableData(){
     console.log('running getTableData function');
     invoke('log_message', {message:"Running get table data function"});
     json = await invoke('recall_latest_hashes');
-    
-    // time to reformat the json so its
-
+    console.log('Retrieved json:', json);
   }
+
   async function getTableData(){
     console.log('running getTableData function');
     invoke('log_message', {message:"Running get table data function"});
     paginationData = await invoke('recall_all_hashes');
     tags = await invoke('recall_tags');
-    // time to reformat the json so its
+    console.log('Retrieved paginationData:', paginationData);
+    console.log('Retrieved tags:', tags);
   }
-getTableData();
 
+  onMount(() => {
+    getTop5TableData();
+    getTableData();
+  });
 </script>
 
 <html class="dark" lang="en">
   <body width="100vw" height="100vh">
     <Tabs>
+      <!-- Package TabItem -->
       <TabItem open>
         <div slot="title" class="flex items-center gap-2">
           <ArchiveSolid size="md" />
           Package
         </div>
-         <span style="opacity:1;color:white;">Press that button to upload your file:</span>
+        <span style="opacity:1;color:white;">Press that button to upload your file:</span>
         <Button on:click={_package} pill>Get Started!</Button>
         <div>
           <Label class="space-y-2">
@@ -106,6 +109,8 @@ getTableData();
           </Toast>
         {/if}
       </TabItem>
+
+      <!-- Download TabItem -->
       <TabItem>
         <div slot="title" class="flex items-center gap-2">
           <ArrowDownToBracketOutline size="md" />
@@ -133,84 +138,86 @@ getTableData();
           </Toast>
         {/if}
       </TabItem>
+
+      <!-- Data TabItem -->
       <TabItem>
         <div slot="title" class="flex items-center gap-2">
-        <TableRowSolid class="w-5 h-5"/>
+          <TableRowSolid class="w-5 h-5"/>
           Data
         </div>
-        <Table on:load={getTop5TableData()}>
-  <TableHead>
-    <TableHeadCell>Id</TableHeadCell>
-    <TableHeadCell>Hash</TableHeadCell>
-    <TableHeadCell>Title</TableHeadCell>
-    <TableHeadCell>Description</TableHeadCell>
-    <TableHeadCell>Tag</TableHeadCell>
-    <TableHeadCell>Time</TableHeadCell>
-  </TableHead>
-  <TableBody tableBodyClass="divide-y">
-    {#each json as item (item.id)}
-    <TableBodyRow>
-      <TableBodyCell>{item.id}</TableBodyCell>
-      <TableBodyCell>{item.hash}</TableBodyCell>
-      <TableBodyCell>{item.title}</TableBodyCell>
-      <TableBodyCell>{item.description}</TableBodyCell>
-      <TableBodyCell>{item.tag}</TableBodyCell>
-      <TableBodyCell>{item.time_unix}</TableBodyCell>
-    </TableBodyRow>
-    {/each}
-    
-  </TableBody>
+        <Table>
+          <TableHead>
+            <TableHeadCell>Id</TableHeadCell>
+            <TableHeadCell>Hash</TableHeadCell>
+            <TableHeadCell>Title</TableHeadCell>
+            <TableHeadCell>Description</TableHeadCell>
+            <TableHeadCell>Tag</TableHeadCell>
+            <TableHeadCell>Time</TableHeadCell>
+          </TableHead>
+          <TableBody>
+            {#each json as item (item.id)}
+            <TableBodyRow>
+              <TableBodyCell>{item.id}</TableBodyCell>
+              <TableBodyCell>{item.hash}</TableBodyCell>
+              <TableBodyCell>{item.title}</TableBodyCell>
+              <TableBodyCell>{item.description}</TableBodyCell>
+              <TableBodyCell>{item.tag}</TableBodyCell>
+              <TableBodyCell>{item.time_unix}</TableBodyCell>
+            </TableBodyRow>
+            {/each}
+          </TableBody>
+        </Table>
+        {#if paginationData != null && tags != {}}
+          <DataTable paginationData={paginationData} tags={tags} />
+        {:else}
+          <Label class="space-y-2">
+            <br>
+            <Input type="text" placeholder="MatrixFS Hash" size="md" disabled value="Loading Data..." />
+          </Label> 
+        {/if}
+      </TabItem>
 
-</Table>
-  {#if paginationData != null && tags != {}}
- <DataTable paginationData=paginationData tags=tags />
-  {:else}
-  <Label class="space-y-2">
-      <br>
-      <Input type="text" placeholder="MatrixFS Hash" size="md" disabled value="Loading Data..." />
-  </Label> 
-  {/if}
-</TabItem>
+      <!-- Instructions TabItem -->
       <TabItem>
         <div slot="title" class="flex items-center gap-2">
           <ClipboardListSolid class="w-5 h-5"/>
           Instructions
         </div>
         <Timeline order="horizontal">
-  <TimelineItem title="Install ipfs">
-    <svelte:fragment slot="icon">
-      <div class="flex items-center">
-        <div class="flex z-10 justify-center items-center w-6 h-6 bg-primary-200 rounded-full ring-0 ring-white dark:bg-primary-900 sm:ring-7 dark:ring-gray-900 shrink-0">
-          1.
-        </div>
-        <div class="hidden sm:flex w-full bg-gray-200 h-0.5 dark:bg-gray-700" />
-      </div>
-    </svelte:fragment>
-    <p class="text-base font-normal text-gray-500 dark:text-gray-400 ">https://docs.ipfs.tech/install/ipfs-desktop/</p>
-  </TimelineItem>
-  <TimelineItem title="Use the Package tab to add the file to your ipfs node">
-    <svelte:fragment slot="icon">
-      <div class="flex items-center">
-        <div class="flex z-10 justify-center items-center w-6 h-6 bg-primary-200 rounded-full ring-0 ring-white dark:bg-primary-900 sm:ring-7 dark:ring-gray-900 shrink-0">
-          2.
-        </div>
-        <div class="hidden sm:flex w-full bg-gray-200 h-0.5 dark:bg-gray-700" />
-      </div>
-    </svelte:fragment>
-    <p class="text-base font-normal text-gray-500 dark:text-gray-400">Press the Get started button in the package tab to get your hash to share with everyone</p>
-  </TimelineItem>
-  <TimelineItem title="Add your file to the database">
-    <svelte:fragment slot="icon">
-      <div class="flex items-center">
-        <div class="flex z-10 justify-center items-center w-6 h-6 bg-primary-200 rounded-full ring-0 ring-white dark:bg-primary-900 sm:ring-7 dark:ring-gray-900 shrink-0">
-          3.
-        </div>
-        <div class="hidden sm:flex w-full bg-gray-200 h-0.5 dark:bg-gray-700" />
-      </div>
-    </svelte:fragment>
-    <p class="text-base font-normal text-gray-500 dark:text-gray-400">This will be implemented in the future :) I hope... <br>After that, you can share the hash you made and you can make your thing searchable</p>
-  </TimelineItem>
-</Timeline>
+          <TimelineItem title="Install ipfs">
+            <svelte:fragment slot="icon">
+              <div class="flex items-center">
+                <div class="flex z-10 justify-center items-center w-6 h-6 bg-primary-200 rounded-full ring-0 ring-white dark:bg-primary-900 sm:ring-7 dark:ring-gray-900 shrink-0">
+                  1.
+                </div>
+                <div class="hidden sm:flex w-full bg-gray-200 h-0.5 dark:bg-gray-700" />
+              </div>
+            </svelte:fragment>
+            <p class="text-base font-normal text-gray-500 dark:text-gray-400 ">https://docs.ipfs.tech/install/ipfs-desktop/</p>
+          </TimelineItem>
+          <TimelineItem title="Use the Package tab to add the file to your ipfs node">
+            <svelte:fragment slot="icon">
+              <div class="flex items-center">
+                <div class="flex z-10 justify-center items-center w-6 h-6 bg-primary-200 rounded-full ring-0 ring-white dark:bg-primary-900 sm:ring-7 dark:ring-gray-900 shrink-0">
+                  2.
+                </div>
+                <div class="hidden sm:flex w-full bg-gray-200 h-0.5 dark:bg-gray-700" />
+              </div>
+            </svelte:fragment>
+            <p class="text-base font-normal text-gray-500 dark:text-gray-400">Press the Get started button in the package tab to get your hash to share with everyone</p>
+          </TimelineItem>
+          <TimelineItem title="Add your file to the database">
+            <svelte:fragment slot="icon">
+              <div class="flex items-center">
+                <div class="flex z-10 justify-center items-center w-6 h-6 bg-primary-200 rounded-full ring-0 ring-white dark:bg-primary-900 sm:ring-7 dark:ring-gray-900 shrink-0">
+                  3.
+                </div>
+                <div class="hidden sm:flex w-full bg-gray-200 h-0.5 dark:bg-gray-700" />
+              </div>
+            </svelte:fragment>
+            <p class="text-base font-normal text-gray-500 dark:text-gray-400">This will be implemented in the future :) I hope... <br>After that, you can share the hash you made and you can make your thing searchable</p>
+          </TimelineItem>
+        </Timeline>
       </TabItem>
     </Tabs>
   </body>
