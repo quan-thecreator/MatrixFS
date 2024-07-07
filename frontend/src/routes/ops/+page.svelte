@@ -2,7 +2,7 @@
   import { Tabs, TabItem, Button, Toast } from 'flowbite-svelte';
   import { ArchiveSolid, ArrowDownToBracketOutline, CloseCircleSolid, CheckCircleSolid, ClipboardListSolid, TableRowSolid,PlusOutline, ChevronDownOutline, FilterSolid, ChevronRightOutline, ChevronLeftOutline } from 'flowbite-svelte-icons';
   import { Section } from 'flowbite-svelte-blocks';
-  import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, TableSearch, Button, Dropdown, DropdownItem, Checkbox, ButtonGroup } from 'flowbite-svelte';
+  import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, TableSearch, Dropdown, DropdownItem, Checkbox, ButtonGroup } from 'flowbite-svelte';
 
   import { Timeline, TimelineItem, Activity, ActivityItem, Group, GroupItem } from 'flowbite-svelte';
   import { invoke } from '@tauri-apps/api/tauri';
@@ -57,6 +57,22 @@
   }
   let json = '';
   let tags = {};
+
+  let divClass='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden';
+  let innerDivClass='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4';
+  let searchClass='w-full md:w-1/2 relative';
+  let svgDivClass='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none';
+  let classInput="text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2  pl-10";
+
+  let searchTerm = '';
+  let currentPosition = 0;
+  const itemsPerPage = 10;
+  const showPage = 5;
+  let totalPages = 0;
+  let pagesToShow = [];
+  let totalItems;
+  let startPage;
+  let endPage;
   async function getTop5TableData(){
     console.log('running getTableData function');
     invoke('log_message', {message:"Running get table data function"});
@@ -71,27 +87,11 @@
     invoke('log_message', {message:"Running get table data function"});
     paginationData = await invoke('recall_all_hashes');
     tags = await invoke('recall_tags');
-    
+    totalItems = paginationData.length;
     // time to reformat the json so its
     renderPagination(paginationData.length);
 
   }
-  let divClass='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden';
-  let innerDivClass='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4';
-  let searchClass='w-full md:w-1/2 relative';
-  let svgDivClass='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none';
-  let classInput="text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2  pl-10";
-
-  let searchTerm = '';
-  let currentPosition = 0;
-  const itemsPerPage = 10;
-  const showPage = 5;
-  let totalPages = 0;
-  let pagesToShow = [];
-  let totalItems = paginationData.length;
-  let startPage;
-  let endPage;
-
   const updateDataAndPagination = () => {
     const currentPageItems = paginationData.slice(currentPosition, currentPosition + itemsPerPage);
     renderPagination(currentPageItems.length);
@@ -126,7 +126,7 @@
     currentPosition = (pageNumber - 1) * itemsPerPage;
     updateDataAndPagination();
   }
-
+  getTableData();
   $: startRange = currentPosition + 1;
   $: endRange = Math.min(currentPosition + itemsPerPage, totalItems);
 
