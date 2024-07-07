@@ -144,6 +144,7 @@
       <TableBodyCell>item.tag</TableBodyCell>
       <TableBodyCell>item.time</TableBodyCell>
     </TableBodyRow>
+    {/each}
     
   </TableBody>
 </Table>
