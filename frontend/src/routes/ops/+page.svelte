@@ -1,6 +1,8 @@
 <script lang="ts">
   import { Tabs, TabItem, Button, Toast } from 'flowbite-svelte';
-  import { ArchiveSolid, ArrowDownToBracketOutline, CloseCircleSolid, CheckCircleSolid, ClipboardListSolid } from 'flowbite-svelte-icons';
+  import { ArchiveSolid, ArrowDownToBracketOutline, CloseCircleSolid, CheckCircleSolid, ClipboardListSolid, TableRowSolid } from 'flowbite-svelte-icons';
+  import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, Checkbox, TableSearch } from 'flowbite-svelte';
+
   import { Timeline, TimelineItem, Activity, ActivityItem, Group, GroupItem } from 'flowbite-svelte';
   import { invoke } from '@tauri-apps/api/tauri';
   import { fly } from 'svelte/transition';
@@ -51,6 +53,16 @@
   function timeout1() {
     if (--counter1 > 0) return setTimeout(timeout1, 1000);
     toastStatus1 = false;
+  }
+  let json = '';
+
+  async function getTableData(){
+    console.log('running getTableData function');
+    invoke('log_message', {message:"Running get table data function"});
+    json = await invoke('recall_latest_hashes');
+    console.log(json);
+    // time to reformat the json so its
+
   }
 </script>
 
@@ -107,6 +119,36 @@
             Download Completed!
           </Toast>
         {/if}
+      </TabItem>
+      <TabItem>
+        <div slot="title" class="flex items-center gap-2">
+        <TableRowSolid class="w-5 h-5"/>
+          Data
+        </div>
+  <Table on:load={getTableData()}>
+  <TableHead>
+    <TableHeadCell>Id</TableHeadCell>
+    <TableHeadCell>Hash</TableHeadCell>
+    <TableHeadCell>Title</TableHeadCell>
+    <TableHeadCell>Description</TableHeadCell>
+    <TableHeadCell>Tag</TableHeadCell>
+    <TableHeadCell>Time</TableHeadCell>
+  </TableHead>
+  <TableBody tableBodyClass="divide-y">
+    {#each json as item (item.id)}
+    <TableBodyRow>
+      <TableBodyCell>item.id</TableBodyCell>
+      <TableBodyCell>item.hash</TableBodyCell>
+      <TableBodyCell>item.title</TableBodyCell>
+      <TableBodyCell>item.description</TableBodyCell>
+      <TableBodyCell>item.tag</TableBodyCell>
+      <TableBodyCell>item.time</TableBodyCell>
+    </TableBodyRow>
+    {/each}
+    
+  </TableBody>
+</Table>
+
       </TabItem>
       <TabItem>
         <div slot="title" class="flex items-center gap-2">
