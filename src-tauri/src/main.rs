@@ -70,7 +70,7 @@ fn main() {
             test_proxy,
             recall_latest_hashes,
             recall_all_hashes,
-            recall_tags
+            recall_tags, add_hash_db
         ])
         //.invoke_handler(tauri::generate_handler![log_message])
         .run(tauri::generate_context!())
