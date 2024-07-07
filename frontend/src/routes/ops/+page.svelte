@@ -55,11 +55,13 @@
     toastStatus1 = false;
   }
   let json = '';
+
   async function getTableData(){
     console.log('running getTableData function');
     invoke('log_message', {message:"Running get table data function"});
     json = await invoke('recall_latest_hashes');
     console.log(json);
+    // time to reformat the json so its
 
   }
 </script>
@@ -133,14 +135,14 @@
     <TableHeadCell>Time</TableHeadCell>
   </TableHead>
   <TableBody tableBodyClass="divide-y">
-    
+    {#each json as item (item.id)}
     <TableBodyRow>
-      <TableBodyCell>Apple MacBook Pro 17"</TableBodyCell>
-      <TableBodyCell>Sliver</TableBodyCell>
-      <TableBodyCell>Laptop</TableBodyCell>
-      <TableBodyCell>$2999</TableBodyCell>
-      <TableBodyCell>stupid</TableBodyCell>
-      <TableBodyCell>stupid</TableBodyCell>
+      <TableBodyCell>item.id</TableBodyCell>
+      <TableBodyCell>item.hash</TableBodyCell>
+      <TableBodyCell>item.title</TableBodyCell>
+      <TableBodyCell>item.description</TableBodyCell>
+      <TableBodyCell>item.tag</TableBodyCell>
+      <TableBodyCell>item.time</TableBodyCell>
     </TableBodyRow>
     
   </TableBody>
