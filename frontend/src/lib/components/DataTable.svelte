@@ -4,6 +4,7 @@
   import { Section } from 'flowbite-svelte-blocks';
   import { PlusOutline, FilterSolid, ChevronRightOutline, ChevronLeftOutline } from 'flowbite-svelte-icons';
   import { invoke } from '@tauri-apps/api/tauri';
+
   export let paginationData: Array<any> = [];
   export let tags: Array<any> = [];
 
@@ -102,7 +103,7 @@
   $: endRange = Math.min(currentPosition + itemsPerPage, totalItems);
 
   // Initial filtering based on searchTerm and selected tags
-  let filteredItems = paginationData.filter((item) => {
+  $: filteredItems = paginationData.filter((item) => {
     const searchTermLower = searchTerm.toLowerCase();
     const matchesSearchTerm = searchTerm === '' ||
       item.title.toLowerCase().includes(searchTermLower) ||
@@ -130,7 +131,7 @@
     console.log("Hash:", hashValue);
     console.log("Title:", titleValue);
     console.log("Description:", descriptionValue);
-    console.log("Large Input:", tagValue);
+    console.log("Tag:", tagValue);
     
     // Reset values or submit to backend, etc.
     await invoke('add_hash_db', { hash: hashValue, title: titleValue, description: descriptionValue, tag: tagValue });
@@ -143,7 +144,7 @@
     hashValue = '';
     titleValue = '';
     descriptionValue = '';
-    tagInputValue = '';
+    tagValue = '';
   }
 </script>
 
@@ -181,9 +182,9 @@
               <TableBodyRow>
                 {#each paginationDataHeaders as header, index}
                   {#if header == "tag"}
-                  <TableBodyCell tdClass="px-4 py-3">{tagDictionary[item[header]]}</TableBodyCell>
+                  <TableBodyCell tdClass="px-1 py-3 w-5">{tagDictionary[item[header]]}</TableBodyCell>
                   {:else}
-                  <TableBodyCell tdClass="px-4 py-3">{item[header]}</TableBodyCell>
+                  <TableBodyCell tdClass="px-1 py-3 w-full">{item[header]}</TableBodyCell>
                   {/if}
                 {/each}
               </TableBodyRow>
@@ -232,3 +233,5 @@
     </svelte:fragment>
   </Modal>
 </Section>
+
+
