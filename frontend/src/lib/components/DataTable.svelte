@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, TableSearch, Button, Dropdown, Checkbox, ButtonGroup, Modal, Textarea, Input, Label } from 'flowbite-svelte';
+  import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, TableSearch, Button, Dropdown, Checkbox, ButtonGroup, Modal, Textarea, Input, Label, Select } from 'flowbite-svelte';
   import { Section } from 'flowbite-svelte-blocks';
   import { PlusOutline, FilterSolid, ChevronRightOutline, ChevronLeftOutline } from 'flowbite-svelte-icons';
   import { invoke } from '@tauri-apps/api/tauri';
@@ -121,6 +121,10 @@
     console.log("showmodel is running");
     model = true;
   }
+  function getKeyByValue(object, value) {
+    return Object.keys(object).find(key =>
+        object[key] === value);
+}
   let hashValue = '';
   let titleValue = '';
   let descriptionValue = '';
@@ -131,7 +135,7 @@
     console.log("Hash:", hashValue);
     console.log("Title:", titleValue);
     console.log("Description:", descriptionValue);
-    console.log("Tag:", tagValue);
+    console.log("Tag:", getKeyByValue(tagDictionary,tagValue));
     
     // Reset values or submit to backend, etc.
     await invoke('add_hash_db', { hash: hashValue, title: titleValue, description: descriptionValue, tag: tagValue });
@@ -146,6 +150,10 @@
     descriptionValue = '';
     tagValue = '';
   }
+  let transformedArray = tags.map(item => ({
+  value: item.id,
+  name: item.name
+}));
 </script>
 
 <style>
@@ -224,8 +232,10 @@
     <Textarea id="description" rows="5" placeholder="Description here" name="desription" label="Your desciption" bind:value={descriptionValue}/>
     </div>
     <div class="mb-6">
-      <Label for="tag" class="block mb-2">Tag</Label>
-      <Input id="tag" size="lg" placeholder="Tag here" bind:value={tagValue}/>
+      <Label>
+      Tag
+  <Select class="mt-2" items={transformedArray} bind:value={tagValue} />
+</Label>
     </div>
     <svelte:fragment slot="footer">
       <Button on:click={addToDB}>Submit</Button>
@@ -233,5 +243,3 @@
     </svelte:fragment>
   </Modal>
 </Section>
-
-
