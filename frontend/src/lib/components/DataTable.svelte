@@ -3,7 +3,7 @@
   import { Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell, TableSearch, Button, Dropdown, Checkbox, ButtonGroup, Modal, Textarea, Input, Label } from 'flowbite-svelte';
   import { Section } from 'flowbite-svelte-blocks';
   import { PlusOutline, FilterSolid, ChevronRightOutline, ChevronLeftOutline } from 'flowbite-svelte-icons';
-
+  import { invoke } from '@tauri-apps/api/tauri';
   export let paginationData: Array<any> = [];
   export let tags: Array<any> = [];
 

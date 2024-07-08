@@ -473,15 +473,14 @@ fn recall_tags() -> Vec<Tag> {
 }
 #[tauri::command]
 fn add_hash_db(hash: String, title: String, description: String, tag: String) -> bool {
-    let query: String = format!(
-        "LET $exists = (SELECT count() FROM hashes WHERE hash = '{}');
-         IF $exists[0].count = 0 THEN (
-            CREATE hashes SET hash=string::replace(\"{}\",\" \",\"\"), title=\"{}\", description=\"{}\", tag={},time_unix=time::unix();
-            );", sanitize_string(hash.clone()),sanitize_string(hash), sanitize_string(title), sanitize_string(description), sanitize_string(tag));
+    let query: String = format!("LET $exists = (SELECT count() FROM hashes WHERE hash = '{}');
+IF count($exists[0])=0 {{CREATE hashes SET hash=string::replace('{}', ' ',''), title='{}', description='{}', tag={},time_unix=time::unix()}};", sanitize_string(hash.clone()),sanitize_string(hash), sanitize_string(title), sanitize_string(description), sanitize_string(tag));
     let query_execution_result = execute_sql_query(query);
     if query_execution_result.is_err() {
+        error!("Failing hash creation");
         return false;
     } else {
+        info!("It works??? - hash row addition {:#?}", query_execution_result.unwrap().text().unwrap());
         return true;
     }
 }
@@ -489,5 +488,6 @@ fn sanitize_string(string_to_sanitize: String) -> String {
     return string_to_sanitize
         .replace("\"", "")
         .replace("\\", "")
-        .replace("-", "");
+        .replace("-", "")
+        .replace("'", "");
 }

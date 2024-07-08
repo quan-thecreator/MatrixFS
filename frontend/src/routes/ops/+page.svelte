@@ -175,7 +175,7 @@
             <Input type="text" placeholder="MatrixFS Hash" size="md" disabled value="Loading Data..." />
           </Label> 
         {/if}
-        <Button on:click={() => {getTableData(); getTop5TableData();}}>Update data</Button>
+        <!--<Button on:click={() => {getTableData(); getTop5TableData();}}>Update data</Button> -->
       </TabItem>
 
       <!-- Instructions TabItem -->
